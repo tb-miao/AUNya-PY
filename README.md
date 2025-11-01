@@ -1,4 +1,6 @@
 # AUNYA-PY
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftb-miao%2FAUNya-PY.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftb-miao%2FAUNya-PY?ref=badge_shield)
+
 A very strange Python program.<br>
 一个很奇怪的python程序
 
@@ -14,3 +16,7 @@ To run it, please install Python first.<br>
 
 ![](https://avatars.githubusercontent.com/u/172878250?v=4)
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftb-miao%2FAUNya-PY.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftb-miao%2FAUNya-PY?ref=badge_large)
