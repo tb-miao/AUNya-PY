@@ -101,6 +101,7 @@ def main():
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
         return
     print("已获取管理员权限！")
+    sleep(0.5)
     # 切换至UNF8编码
     os.system("chcp 65001")
     os.system("title 时间同步系统 by tbnya")
