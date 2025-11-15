@@ -1,14 +1,11 @@
-# ./main.py
-# 运行前请先安装requests库：pip install requests
-# 作者: tbnya
-# 协议：Apache License 2.0
-import requests
 import os
-import platform
 from datetime import datetime, timedelta, timezone
-from time import sleep
+import platform
+import time
 import requests
-from requests.exceptions import ConnectionError, Timeout, HTTPError
+import asyncio
+import aiohttp
+from time import sleep
 import ctypes
 import sys
 
@@ -21,10 +18,10 @@ class bcolors:
     ZS = '\033[35m'  # 紫色
 
 def is_admin():
-   try:
-       return ctypes.windll.shell32.IsUserAnAdmin()
-   except:
-       return False
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
 def input_with_timeout(prompt, timeout):
     from threading import Thread
@@ -54,49 +51,26 @@ def input_with_timeout(prompt, timeout):
             tcflush(sys.stdin, TCIFLUSH)
         return None
 
-
-def get_internet_time():
+async def get_internet_time_async(session):
+    # 定义 API 的 URL 和请求参数
+    url = "https://api.uuni.cn/api/time"
+    headers = {
+        "Accept": "application/json"  # 确保请求头正确
+    }
     try:
-        # 使用更可靠的超时设置（连接超时3秒，读取超时5秒）
-        response = requests.get(
-            'http://worldtimeapi.org/api/ip',
-            timeout=(3, 5),
-            headers={'User-Agent': 'Mozilla/5.0'}
-        )
-        response.raise_for_status()
-        data = response.json()
-        return datetime.fromisoformat(data['datetime'])
-    except ConnectionError as e:
-        print(f"{bcolors.RED}网络连接错误：请检查网络连接或防火墙设置{bcolors.NC}")
-    except Timeout as e:
-        print(f"{bcolors.YELLOW}请求超时：服务器响应时间过长{bcolors.NC}")
-    except HTTPError as e:
-        print(f"{bcolors.RED}HTTP错误：服务器返回{response.status_code}状态码{bcolors.NC}")
-    except Exception as e:
-        print(f"{bcolors.RED}未知错误：{str(e)}{bcolors.NC}")
-    return None
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()  # 检查 HTTP 响应状态码
+            data = await response.json()  # 将返回的 JSON 数据解析为 Python 对象
+            timestamp = data['timestamp']
+            
+            # 将 timestamp 转换为 datetime 对象
+            internet_time = datetime.fromtimestamp(int(timestamp), timezone(timedelta(hours=8)))
+            return internet_time
+    except requests.exceptions.RequestException as e:
+        print(f"{bcolors.RED}请求失败: {e}{bcolors.NC}")
+        return None
 
-
-def set_system_time(target_time):
-    system = platform.system()
-    try:
-        if system == 'Windows':
-            date_str = target_time.strftime('%Y-%m-%d')
-            time_str = target_time.strftime('%H:%M:%S')
-            os.system(f'date {date_str}')
-            os.system(f'time {time_str}')
-        elif system == 'Linux':
-            time_str = target_time.strftime('%Y-%m-%d %H:%M:%S')
-            os.system(f'sudo date -s "{time_str}"')
-        elif system == 'Darwin':  # macOS
-            time_str = target_time.strftime('%Y-%m-%d %H:%M:%S')
-            os.system(f'sudo date -s "{time_str}"')
-        return True
-    except Exception as e:
-        print(f"{bcolors.RED}错误：时间同步失败 - {str(e)}{bcolors.NC}")
-        return False
-
-def main():
+async def main_async():
     if not is_admin():
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
         return
@@ -131,14 +105,9 @@ def main():
 
     # 获取网络时间
     print(f"{bcolors.ZS}正在获取网络时间...{bcolors.NC}")
-    for retry in range(3):
-        internet_time = get_internet_time()
-        if internet_time:
-            break
-        print(f"{bcolors.YELLOW}第 {retry+1} 次重试...{bcolors.NC}")
-        sleep(2)
+    async with aiohttp.ClientSession() as session:
+        internet_time = await get_internet_time_async(session)
 
-    
     if internet_time:
         print(f"{bcolors.BLUE}标准网络时间: {internet_time.strftime('%Y-%m-%d %H:%M:%S %Z')}{bcolors.NC}")
         
@@ -161,8 +130,28 @@ def main():
                     print(f"{bcolors.RED}请使用管理员/root权限运行本程序{bcolors.NC}")
         else:
             print(f"{bcolors.GREEN}时间同步状态正常{bcolors.NC}")
-    
+
     print("=================================================================")
     input("按任意键退出...")
+
+def set_system_time(target_time):
+    system = platform.system()
+    try:
+        if system == 'Windows':
+            date_str = target_time.strftime('%Y-%m-%d')
+            time_str = target_time.strftime('%H:%M:%S')
+            os.system(f'date {date_str}')
+            os.system(f'time {time_str}')
+        elif system == 'Linux':
+            time_str = target_time.strftime('%Y-%m-%d %H:%M:%S')
+            os.system(f'sudo date -s "{time_str}"')
+        elif system == 'Darwin':  # macOS
+            time_str = target_time.strftime('%Y-%m-%d %H:%M:%S')
+            os.system(f'sudo date -s "{time_str}"')
+        return True
+    except Exception as e:
+        print(f"{bcolors.RED}错误：时间同步失败 - {str(e)}{bcolors.NC}")
+        return False
+
 if __name__ == '__main__':
-    main()
+    asyncio.run(main_async())
