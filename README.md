@@ -4,6 +4,7 @@
 A very strange Python program.<br>
 一个很奇怪的python程序
 
+> program language: chinese<br>
 > Language: Python<br>
 > Author: tbnya<br>
 > Start development time: 2025-11-01<br>
