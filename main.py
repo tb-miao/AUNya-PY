@@ -76,9 +76,11 @@ async def main_async():
         return
     print("已获取管理员权限！")
     sleep(0.5)
+    print("主机正常")
+    sleep(0.5)
     # 切换至UNF8编码
     os.system("chcp 65001")
-    os.system("title 时间同步系统 by tbnya")
+    os.system("title AUNYA-PY_时间同步系统 by tbnya")
     # 显示ASCII艺术字
     print("=================================================================")
     print("                                                                 ")
